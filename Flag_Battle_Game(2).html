@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Flag Battle Game</title>
+
+<style>
+*{box-sizing:border-box} html,body{margin:0;background:#07111f;color:#fff;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+body{min-height:100vh;display:flex;justify-content:center} .app{position:relative;width:100vw;max-width:none;min-height:100vh;background:#081426;padding:9px 10px 18px;overflow:hidden} .app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;background:radial-gradient(circle at 18% 20%,rgba(0,180,255,.10),transparent 28%),radial-gradient(circle at 82% 28%,rgba(90,70,255,.09),transparent 30%),radial-gradient(circle at 52% 82%,rgba(0,120,210,.08),transparent 32%),linear-gradient(120deg,rgba(8,20,38,.30),rgba(4,10,20,.55));animation:bgDrift 16s ease-in-out infinite alternate;will-change:transform,opacity} .app::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.025) 45%,transparent 55%);background-size:220% 100%;animation:bgSheen 11s linear infinite;will-change:background-position} .app>*{position:relative;z-index:1}@keyframes bgDrift{0%{transform:translate3d(-2%, -1%,0) scale(1);opacity:.72}50%{transform:translate3d(2%,2%,0) scale(1.06);opacity:1}100%{transform:translate3d(-1%,3%,0) scale(1.02);opacity:.78}}@keyframes bgSheen{0%{background-position:120% 0}100%{background-position:-120% 0}}@media(prefers-reduced-motion:reduce){.app::before,.app::after{animation:none}}
+.header{display:flex;align-items:center;gap:8px;margin:4px 0 8px} .title{flex:1;text-align:center;font-size:clamp(20px,6vw,34px);font-weight:1000;letter-spacing:-1px;text-shadow:0 1px 1px #000,0 0 4px rgba(124,77,255,.55)} .spark{font-size:23px}
+.timer{background:#ff143c;border:2px solid #ff718b;border-radius:15px;padding:4px 9px;font-weight:1000;font-size:18px;box-shadow:0 0 16px #ff1744}
+.gear{font-size:20px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px} .card{height:82px;border-radius:11px;background:linear-gradient(135deg,#202030,#11121f);border:1px solid #3d3d55;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:18px;box-shadow:0 0 10px #111} .card.comment{border-color:#ffe900;box-shadow:0 0 16px #6c5b00} .card .ico{font-size:31px;line-height:30px} .yellow{color:#fff000;font-size:23px} .cyan{color:#00d9ff;font-size:23px}
+.bar{margin:9px -10px 10px;border-top:3px solid #00bfff;border-bottom:3px solid #00bfff;background:#07101d;text-align:center;padding:10px 3px;font-size:20px;font-weight:1000;letter-spacing:.2px;box-shadow:0 0 10px rgba(0,191,255,.45)}
+.grid{display:grid;grid-template-columns:repeat(9,1fr);gap:7px 5px;padding:0 1px} .country{min-width:0;text-align:center;transition:.35s transform,.35s filter} .country.leader{transform:translateY(-5px) scale(1.04);filter:drop-shadow(0 0 8px #fff)} .flag{height:clamp(34px,7vw,55px);border-radius:4px;display:flex;align-items:center;justify-content:center;background:#111;border:1px solid #111;overflow:hidden;box-shadow:0 1px 4px #000;animation:flagFloat 3.2s ease-in-out infinite;will-change:transform}.flag img{width:100%;height:100%;display:block;object-fit:cover;image-rendering:auto;-webkit-backface-visibility:hidden;backface-visibility:hidden}@keyframes flagFloat{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(1px,-2px) rotate(-.7deg)}50%{transform:translate(-1px,1px) rotate(.7deg)}75%{transform:translate(1px,2px) rotate(-.35deg)}}@media(prefers-reduced-motion:reduce){.flag{animation:none}} .count{font-size:clamp(14px,3.5vw,22px);font-weight:1000;margin-top:3px;color:#fff;text-shadow:0 1px 1px #000,0 1px 2px rgba(0,0,0,.9);line-height:1.1} .name{font-size:clamp(8px,1.55vw,12px);font-weight:800;opacity:1;color:#fff;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.status{display:none;position:fixed;left:10px;bottom:10px;background:#101322dd;border:1px solid #3b3f5d;border-radius:10px;padding:7px 10px;font-size:11px;z-index:4} .code{font-weight:1000;color:#ffe600}
+.commentPopup{position:fixed;left:50%;top:18%;transform:translate(-50%,-20px) scale(.92);width:min(92%,520px);background:linear-gradient(135deg,#171a2d,#0a0c18);border:2px solid #ffe900;border-radius:18px;padding:14px 18px;text-align:center;box-shadow:0 0 28px #ffe90066,0 8px 30px #000;z-index:20;opacity:0;pointer-events:none;transition:.25s ease}.commentPopup.show{opacity:1;transform:translate(-50%,0) scale(1)}.commentPopupName{font-size:20px;font-weight:1000;color:#ffe900;margin-bottom:6px}.commentPopupText{font-size:18px;font-weight:800;line-height:1.3;word-break:break-word}.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:10} .modal.hide{display:none} .box{width:min(90%,380px);background:#151727;border:1px solid #5b5d83;border-radius:18px;padding:22px;text-align:center;box-shadow:0 0 35px #6a00ff66} button{border:0;border-radius:10px;padding:11px 18px;font-weight:900;cursor:pointer} .ok{background:#ffe900;color:#111;font-size:18px}
+@media(max-width:380px){.grid{gap:5px 3px} .cards .card{height:72px;font-size:15px}}
+
+.featureToast{position:fixed;left:50%;top:10%;transform:translate(-50%,-20px) scale(.9);opacity:0;pointer-events:none;z-index:30;width:min(94%,560px);padding:13px 18px;border:2px solid #00d9ff;border-radius:16px;background:linear-gradient(135deg,#10152aee,#090b18ee);box-shadow:0 0 28px #00d9ff66;text-align:center;font-weight:1000;transition:.25s}
+.featureToast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.featureToast .big{font-size:clamp(22px,6vw,36px);margin-bottom:4px;text-shadow:0 1px 1px #000;letter-spacing:.1px}.featureToast .sub{font-size:15px;opacity:1;text-shadow:0 1px 1px #000}
+.supporters{position:fixed;right:8px;top:8px;width:min(45%,250px);padding:10px;border:1px solid #2e5d8a;border-radius:12px;background:#06111fee;z-index:8;display:none;box-shadow:0 0 18px #000}.supporters.show{display:block}.supporters h3{margin:0 0 7px;font-size:15px;text-align:center;color:#55ddff;text-shadow:0 1px 1px #000}.supporterRow{display:flex;justify-content:space-between;font-size:13px;font-weight:800;padding:4px 0;color:#fff;text-shadow:0 1px 1px #000}.goalBox{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);width:min(86%,500px);padding:7px 10px;border-radius:12px;background:#0b0d18e8;border:1px solid #00d9ff;z-index:7;display:none}.goalBox.show{display:block}.goalText{font-size:12px;font-weight:900;text-align:center;margin-bottom:4px}.goalTrack{height:7px;background:#20243a;border-radius:9px;overflow:hidden}.goalFill{height:100%;width:0;background:linear-gradient(90deg,#00d9ff,#ffe900);transition:.3s}
+.rush{position:fixed;left:50%;top:1%;transform:translateX(-50%);z-index:25;padding:7px 16px;border-radius:20px;background:#ff143c;border:2px solid #ff718b;font-weight:1000;display:none;box-shadow:0 0 20px #ff1744}.rush.show{display:block;animation:rushPulse .8s infinite alternate}@keyframes rushPulse{to{transform:translateX(-50%) scale(1.06)}}
+.winnerModal{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:40}.winnerModal.show{display:flex}.winnerBox{width:min(90%,430px);text-align:center;padding:28px;border-radius:22px;background:linear-gradient(135deg,#171a2d,#080a15);border:2px solid #ffe900;box-shadow:0 0 45px #ffe90066}.winnerFlag{font-size:80px}.winnerBox h2{font-size:30px;margin:8px 0}.winnerBox p{font-size:17px;margin:4px} .victoryTarget{position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:9;padding:5px 12px;border-radius:14px;background:#111b33e8;border:1px solid #00d9ff;color:#fff;font-size:12px;font-weight:1000;box-shadow:0 0 12px #00d9ff33;display:none}.victoryTarget.show{display:block}.leaderCrown{position:absolute;left:50%;top:-24px;transform:translateX(-50%);font-size:25px;z-index:3;display:none;filter:drop-shadow(0 1px 2px #000)}.country{position:relative}.country.crowned .leaderCrown{display:block}
+</style></head>
+<body><main class="app">
+<div class="header"><span class="spark">✦</span><div class="title">BOOST YOUR COUNTRY</div><div id="timer" class="timer">00:00</div><span class="gear">⚙️</span></div>
+<div class="cards"><div class="card comment"><div class="ico">💬</div><div>Comment <span id="commentPointsDisplay" class="yellow">+1 Points</span></div></div><div class="card"><div class="ico">🔔</div><div>Subscribe <span id="subscribePointsDisplay" class="cyan">+10 Points</span></div></div></div>
+<div class="bar">COMMENT FAST = LEVEL UP</div><section id="grid" class="grid"></section>
+<div class="status">Connection: <span id="conn">starting…</span> · Code: <span id="code" class="code">------</span></div>
+<div id="commentPopup" class="commentPopup"><div id="commentPopupName" class="commentPopupName"></div><div id="commentPopupText" class="commentPopupText"></div></div>
+</main>
+
+<div id="victoryTarget" class="victoryTarget">🏆 VICTORY: 500 POINTS</div>
+<div id="featureToast" class="featureToast"><div id="featureToastBig" class="big"></div><div id="featureToastSub" class="sub"></div></div>
+<div id="supporters" class="supporters"><h3>🏆 TOP SUPPORTERS</h3><div id="supporterList"></div></div>
+<div id="goalBox" class="goalBox"><div id="goalText" class="goalText"></div><div class="goalTrack"><div id="goalFill" class="goalFill"></div></div></div>
+<div id="rush" class="rush">⚡ FINAL RUSH ⚡</div>
+<div id="winnerModal" class="winnerModal"><div class="winnerBox"><div id="winnerFlag" class="winnerFlag">🏆</div><h2 id="winnerTitle">WINNER!</h2><p id="winnerScore"></p><p id="winnerNext"></p></div></div>
+<div id="modal" class="modal"><div class="box"><h2>FLAG BATTLE</h2><p>Game connection code:</p><div id="bigcode" class="code" style="font-size:32px">------</div><p style="opacity:.7">Open Control_Panel.html on your PC and enter this code.</p><button class="ok" onclick="closeModal()">OK</button></div></div>
+<script>
+const countries=[{"name": "Afghanistan", "flag": "🇦🇫"}, {"name": "Albania", "flag": "🇦🇱"}, {"name": "Algeria", "flag": "🇩🇿"}, {"name": "Andorra", "flag": "🇦🇩"}, {"name": "Angola", "flag": "🇦🇴"}, {"name": "Antigua & Barbuda", "flag": "🇦🇬"}, {"name": "Argentina", "flag": "🇦🇷"}, {"name": "Armenia", "flag": "🇦🇲"}, {"name": "Australia", "flag": "🇦🇺"}, {"name": "Austria", "flag": "🇦🇹"}, {"name": "Azerbaijan", "flag": "🇦🇿"}, {"name": "Bahamas", "flag": "🇧🇸"}, {"name": "Bahrain", "flag": "🇧🇭"}, {"name": "Bangladesh", "flag": "🇧🇩"}, {"name": "Barbados", "flag": "🇧🇧"}, {"name": "Belarus", "flag": "🇧🇾"}, {"name": "Belgium", "flag": "🇧🇪"}, {"name": "Belize", "flag": "🇧🇿"}, {"name": "Benin", "flag": "🇧🇯"}, {"name": "Bhutan", "flag": "🇧🇹"}, {"name": "Bolivia", "flag": "🇧🇴"}, {"name": "Bosnia & Herzegovina", "flag": "🇧🇦"}, {"name": "Botswana", "flag": "🇧🇼"}, {"name": "Brazil", "flag": "🇧🇷"}, {"name": "Brunei", "flag": "🇧🇳"}, {"name": "Bulgaria", "flag": "🇧🇬"}, {"name": "Burkina Faso", "flag": "🇧🇫"}, {"name": "Burundi", "flag": "🇧🇮"}, {"name": "Cabo Verde", "flag": "🇨🇻"}, {"name": "Cambodia", "flag": "🇰🇭"}, {"name": "Cameroon", "flag": "🇨🇲"}, {"name": "Canada", "flag": "🇨🇦"}, {"name": "Central African Republic", "flag": "🇨🇫"}, {"name": "Chad", "flag": "🇹🇩"}, {"name": "Chile", "flag": "🇨🇱"}, {"name": "China", "flag": "🇨🇳"}, {"name": "Colombia", "flag": "🇨🇴"}, {"name": "Comoros", "flag": "🇰🇲"}, {"name": "Congo", "flag": "🇨🇬"}, {"name": "Costa Rica", "flag": "🇨🇷"}, {"name": "Croatia", "flag": "🇭🇷"}, {"name": "Cuba", "flag": "🇨🇺"}, {"name": "Cyprus", "flag": "🇨🇾"}, {"name": "Czechia", "flag": "🇨🇿"}, {"name": "Denmark", "flag": "🇩🇰"}, {"name": "Djibouti", "flag": "🇩🇯"}, {"name": "Dominica", "flag": "🇩🇲"}, {"name": "Dominican Republic", "flag": "🇩🇴"}, {"name": "Ecuador", "flag": "🇪🇨"}, {"name": "Egypt", "flag": "🇪🇬"}, {"name": "El Salvador", "flag": "🇸🇻"}, {"name": "Estonia", "flag": "🇪🇪"}, {"name": "Eswatini", "flag": "🇸🇿"}, {"name": "Ethiopia", "flag": "🇪🇹"}, {"name": "Fiji", "flag": "🇫🇯"}, {"name": "Finland", "flag": "🇫🇮"}, {"name": "France", "flag": "🇫🇷"}, {"name": "Gabon", "flag": "🇬🇦"}, {"name": "Gambia", "flag": "🇬🇲"}, {"name": "Georgia", "flag": "🇬🇪"}, {"name": "Germany", "flag": "🇩🇪"}, {"name": "Ghana", "flag": "🇬🇭"}, {"name": "Greece", "flag": "🇬🇷"}, {"name": "Grenada", "flag": "🇬🇩"}, {"name": "Guatemala", "flag": "🇬🇹"}, {"name": "Guinea", "flag": "🇬🇳"}, {"name": "Guyana", "flag": "🇬🇾"}, {"name": "Haiti", "flag": "🇭🇹"}, {"name": "Honduras", "flag": "🇭🇳"}, {"name": "Hungary", "flag": "🇭🇺"}, {"name": "Iceland", "flag": "🇮🇸"}, {"name": "India", "flag": "🇮🇳"}, {"name": "Indonesia", "flag": "🇮🇩"}, {"name": "Iran", "flag": "🇮🇷"}, {"name": "Iraq", "flag": "🇮🇶"}, {"name": "Ireland", "flag": "🇮🇪"}, {"name": "Israel", "flag": "🇮🇱"}, {"name": "Italy", "flag": "🇮🇹"}, {"name": "Jamaica", "flag": "🇯🇲"}, {"name": "Japan", "flag": "🇯🇵"}, {"name": "Jordan", "flag": "🇯🇴"}, {"name": "Kazakhstan", "flag": "🇰🇿"}, {"name": "Kenya", "flag": "🇰🇪"}, {"name": "Kiribati", "flag": "🇰🇮"}, {"name": "Kuwait", "flag": "🇰🇼"}, {"name": "Kyrgyzstan", "flag": "🇰🇬"}, {"name": "Laos", "flag": "🇱🇦"}, {"name": "Latvia", "flag": "🇱🇻"}, {"name": "Lebanon", "flag": "🇱🇧"}, {"name": "Lesotho", "flag": "🇱🇸"}, {"name": "Liberia", "flag": "🇱🇷"}, {"name": "Libya", "flag": "🇱🇾"}, {"name": "Liechtenstein", "flag": "🇱🇮"}, {"name": "Lithuania", "flag": "🇱🇹"}, {"name": "Luxembourg", "flag": "🇱🇺"}, {"name": "Madagascar", "flag": "🇲🇬"}, {"name": "Malawi", "flag": "🇲🇼"}, {"name": "Malaysia", "flag": "🇲🇾"}, {"name": "Maldives", "flag": "🇲🇻"}, {"name": "Mali", "flag": "🇲🇱"}, {"name": "Malta", "flag": "🇲🇹"}, {"name": "Mauritania", "flag": "🇲🇷"}, {"name": "Mauritius", "flag": "🇲🇺"}, {"name": "Mexico", "flag": "🇲🇽"}, {"name": "Moldova", "flag": "🇲🇩"}, {"name": "Monaco", "flag": "🇲🇨"}, {"name": "Mongolia", "flag": "🇲🇳"}, {"name": "Montenegro", "flag": "🇲🇪"}, {"name": "Morocco", "flag": "🇲🇦"}, {"name": "Mozambique", "flag": "🇲🇿"}, {"name": "Myanmar", "flag": "🇲🇲"}, {"name": "Namibia", "flag": "🇳🇦"}, {"name": "Nauru", "flag": "🇳🇷"}, {"name": "Nepal", "flag": "🇳🇵"}, {"name": "Netherlands", "flag": "🇳🇱"}, {"name": "New Zealand", "flag": "🇳🇿"}, {"name": "Nicaragua", "flag": "🇳🇮"}, {"name": "Niger", "flag": "🇳🇪"}, {"name": "Nigeria", "flag": "🇳🇬"}, {"name": "North Korea", "flag": "🇰🇵"}, {"name": "North Macedonia", "flag": "🇲🇰"}, {"name": "Norway", "flag": "🇳🇴"}, {"name": "Oman", "flag": "🇴🇲"}, {"name": "Pakistan", "flag": "🇵🇰"}, {"name": "Palau", "flag": "🇵🇼"}, {"name": "Panama", "flag": "🇵🇦"}, {"name": "Papua New Guinea", "flag": "🇵🇬"}, {"name": "Paraguay", "flag": "🇵🇾"}, {"name": "Peru", "flag": "🇵🇪"}, {"name": "Philippines", "flag": "🇵🇭"}, {"name": "Poland", "flag": "🇵🇱"}, {"name": "Portugal", "flag": "🇵🇹"}, {"name": "Qatar", "flag": "🇶🇦"}, {"name": "Romania", "flag": "🇷🇴"}, {"name": "Russia", "flag": "🇷🇺"}, {"name": "Rwanda", "flag": "🇷🇼"}, {"name": "Saint Lucia", "flag": "🇱🇨"}, {"name": "Samoa", "flag": "🇼🇸"}, {"name": "San Marino", "flag": "🇸🇲"}, {"name": "Saudi Arabia", "flag": "🇸🇦"}, {"name": "Senegal", "flag": "🇸🇳"}, {"name": "Serbia", "flag": "🇷🇸"}, {"name": "Seychelles", "flag": "🇸🇨"}, {"name": "Singapore", "flag": "🇸🇬"}, {"name": "Slovakia", "flag": "🇸🇰"}, {"name": "Slovenia", "flag": "🇸🇮"}, {"name": "Somalia", "flag": "🇸🇴"}, {"name": "South Africa", "flag": "🇿🇦"}, {"name": "South Korea", "flag": "🇰🇷"}, {"name": "South Sudan", "flag": "🇸🇸"}, {"name": "Spain", "flag": "🇪🇸"}, {"name": "Sri Lanka", "flag": "🇱🇰"}, {"name": "Sudan", "flag": "🇸🇩"}, {"name": "Suriname", "flag": "🇸🇷"}, {"name": "Sweden", "flag": "🇸🇪"}, {"name": "Switzerland", "flag": "🇨🇭"}, {"name": "Syria", "flag": "🇸🇾"}, {"name": "Taiwan", "flag": "🇹🇼"}, {"name": "Tajikistan", "flag": "🇹🇯"}, {"name": "Tanzania", "flag": "🇹🇿"}, {"name": "Thailand", "flag": "🇹🇭"}, {"name": "Togo", "flag": "🇹🇬"}, {"name": "Tonga", "flag": "🇹🇴"}, {"name": "Trinidad & Tobago", "flag": "🇹🇹"}, {"name": "Tunisia", "flag": "🇹🇳"}, {"name": "Turkey", "flag": "🇹🇷"}, {"name": "Turkmenistan", "flag": "🇹🇲"}, {"name": "Tuvalu", "flag": "🇹🇻"}, {"name": "Uganda", "flag": "🇺🇬"}, {"name": "Ukraine", "flag": "🇺🇦"}, {"name": "United Arab Emirates", "flag": "🇦🇪"}, {"name": "United Kingdom", "flag": "🇬🇧"}, {"name": "United States", "flag": "🇺🇸"}, {"name": "Uruguay", "flag": "🇺🇾"}, {"name": "Uzbekistan", "flag": "🇺🇿"}, {"name": "Vanuatu", "flag": "🇻🇺"}, {"name": "Vatican City", "flag": "🇻🇦"}, {"name": "Venezuela", "flag": "🇻🇪"}, {"name": "Vietnam", "flag": "🇻🇳"}, {"name": "Yemen", "flag": "🇾🇪"}, {"name": "Zambia", "flag": "🇿🇲"}, {"name": "Zimbabwe", "flag": "🇿🇼"}];
+const state={counts:Object.fromEntries(countries.map(c=>[c.name,0])),running:false,seconds:0,weights:{comment:1,subscribe:10,custom:1},features:{featOvertake:true,featSupporters:true,featCombo:true,featMilestone:true,featRush:true,featWinner:true,featCountdown:true,featGoal:true,featRandom:true,featVictory:true,modeOvertake:'AUTO',modeSupporters:'AUTO',modeCombo:'AUTO',modeMilestone:'AUTO',modeRush:'AUTO',modeWinner:'AUTO',modeCountdown:'AUTO',modeGoal:'AUTO',modeRandom:'AUTO',supporterCount:3,comboThreshold:5,milestoneStep:500,roundDuration:180,finalRushSeconds:30,countdownSeconds:5,goalPoints:10000,randomDuration:15,victoryPoints:500,victoryDisplaySeconds:5,crownEnabled:false,crownPoints:500,soundEnabled:true,soundVolume:0.55},supporters:{},comboCountry:'',comboCount:0,milestones:{},goalTotal:0,leader:'',lastLeader:'',countdown:0,eventMultiplier:1,eventTimer:0,roundEnded:false};
+function updatePointDisplays(){const a=document.getElementById('commentPointsDisplay'),b=document.getElementById('subscribePointsDisplay');if(a)a.textContent='+'+state.weights.comment+' Points';if(b)b.textContent='+'+state.weights.subscribe+' Points';}
+updatePointDisplays();
+let audioCtx=null;
+function unlockAudio(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
+function playSound(kind='comment'){if(!state.soundEnabled)return;try{unlockAudio();if(!audioCtx)return;const now=audioCtx.currentTime, gain=audioCtx.createGain(), osc=audioCtx.createOscillator();const vol=Math.max(0,Math.min(1,Number(state.soundVolume)||0));const presets={comment:[520,0.07,'sine'],overtake:[660,0.12,'triangle'],milestone:[740,0.16,'sine'],crown:[880,0.18,'triangle'],victory:[523,0.18,'sine']};const [freq,dur,type]=presets[kind]||presets.comment;osc.type=type;osc.frequency.setValueAtTime(freq,now);if(kind==='victory')osc.frequency.exponentialRampToValueAtTime(1046,now+dur);if(kind==='milestone')osc.frequency.exponentialRampToValueAtTime(988,now+dur);gain.gain.setValueAtTime(0.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(0.0001,vol*0.16),now+0.01);gain.gain.exponentialRampToValueAtTime(0.0001,now+dur);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+dur+0.02);if(kind==='victory'){setTimeout(()=>playSound('milestone'),160);setTimeout(()=>playSound('crown'),330)}}catch(e){}}
+function updateVictoryTarget(){const el=document.getElementById('victoryTarget');if(!state.features.featVictory){el.classList.remove('show');return}el.textContent=`🏆 VICTORY: ${Math.max(1,Number(state.features.victoryPoints)||1)} POINTS`;el.classList.add('show')}
+function updateCrowns(){const enabled=!!state.features.crownEnabled, threshold=Math.max(1,Number(state.features.crownPoints)||1),leader=currentLeader&&currentLeader();document.querySelectorAll('.country').forEach(el=>{const c=el.dataset.name;el.classList.toggle('crowned',enabled&&leader===c&&Number(state.counts[c]||0)>=threshold)})}
+function triggerVictoryIfNeeded(country,newVal){if(state.roundEnded||!state.running||!featureAuto('featVictory'))return;const target=Math.max(1,Number(state.features.victoryPoints)||1);if(newVal<target)return;state.roundEnded=true;state.running=false;const c=countries.find(x=>x.name===country);document.getElementById('winnerFlag').textContent=c?.flag||'🏆';document.getElementById('winnerTitle').textContent=`🏆 ${country} WINS!`;document.getElementById('winnerScore').textContent=`${newVal} points`;document.getElementById('winnerNext').textContent='';document.getElementById('winnerModal').classList.add('show');playSound('victory');const ms=Math.max(1,Number(state.features.victoryDisplaySeconds)||5)*1000;clearTimeout(window._victoryHideTimer);window._victoryHideTimer=setTimeout(()=>document.getElementById('winnerModal').classList.remove('show'),ms);sync()}
+const grid=document.getElementById('grid');
+function flagCode(flag){const chars=[...flag];return chars.map(ch=>String.fromCharCode(ch.codePointAt(0)-0x1F1E6+97)).join('')}
+countries.forEach(c=>{const el=document.createElement('div');el.className='country';el.dataset.name=c.name;el.innerHTML=`<div class="leaderCrown">👑</div><div class="flag"><img src="https://flagcdn.com/w640/${flagCode(c.flag)}.png" alt="${c.name} flag" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=c.flag"></div><div class="count">0</div><div class="name">${c.name}</div>`;grid.appendChild(el)});
+function render(){const vals=Object.values(state.counts);const max=Math.max(0,...vals);const order=new Map(countries.map((c,i)=>[c.name,i]));const sorted=[...countries].sort((a,b)=>((state.counts[b.name]||0)-(state.counts[a.name]||0))||((order.get(a.name)||0)-(order.get(b.name)||0)));sorted.forEach(c=>{const el=grid.querySelector(`[data-name="${CSS.escape(c.name)}"]`);el.querySelector('.count').textContent=state.counts[c.name]||0;el.classList.toggle('leader',max>0 && state.counts[c.name]===max);grid.appendChild(el)});}
+function closeModal(){unlockAudio();document.getElementById('modal').classList.add('hide')}
+let commentPopupTimer=null;
+function showCommentPopup(name,text){
+  const popup=document.getElementById('commentPopup');
+  document.getElementById('commentPopupName').textContent=name||'Viewer';
+  document.getElementById('commentPopupText').textContent=text||'';
+  popup.classList.add('show');
+  clearTimeout(commentPopupTimer);
+  commentPopupTimer=setTimeout(()=>popup.classList.remove('show'),3500);
+}
+function codeGen(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+
+let roomCode=codeGen(), conn=null;
+
+function ittyConnect(channel, options={}){
+  let ws=null, queue=[], closed=false, state=null, listeners={};
+  const url=/^wss?:/.test(channel)?channel:('wss://itty.ws/c/'+encodeURIComponent(channel));
+  const qs=new URLSearchParams(options||{}).toString();
+  const endpoint=url+(qs?('?'+qs):'');
+  function emit(type,payload){(listeners[type]||[]).slice().forEach(fn=>{try{fn(payload)}catch(e){}});(listeners['*']||[]).slice().forEach(fn=>{try{fn(payload)}catch(e){}})}
+  function open(){
+    if(closed) return api;
+    if(ws && (ws.readyState===0 || ws.readyState===1)) return api;
+    try{
+      ws=new WebSocket(endpoint);
+      ws.onopen=()=>{
+        queue.splice(0).forEach(x=>{try{ws.send(x)}catch(e){}});
+        emit('open',state);
+      };
+      ws.onmessage=e=>{
+        try{
+          const s=JSON.parse(e.data);
+          const message=s && s.message;
+          state={...(message && !Array.isArray(message) ? message : {}),...s};
+          emit(s && s.type ? s.type : 'message',state);
+          if(!(s && s.type)) emit('message',state);
+        }catch(err){emit('error',err)}
+      };
+      ws.onerror=e=>emit('error',e);
+      ws.onclose=()=>{ws=null;emit('close',state)};
+    }catch(e){emit('error',e)}
+    return api;
+  }
+  function send(message){
+    const raw=JSON.stringify(message);
+    if(ws && ws.readyState===1){try{ws.send(raw)}catch(e){queue.push(raw)}}
+    else queue.push(raw);
+    open();
+    return api;
+  }
+  const api={
+    open,
+    send,
+    on(type,fn){(listeners[type]||(listeners[type]=[])).push(fn);open();return api},
+    remove(type,fn){listeners[type]=(listeners[type]||[]).filter(x=>x!==fn);return api},
+    close(){closed=true;if(ws){try{ws.close()}catch(e){}};ws=null;return api}
+  };
+  return api;
+}
+function makeRelayConnection(code, role){
+  const alias=(role||'client')+'-'+Math.random().toString(36).slice(2,10);
+  const channel='flagbattle-'+code;
+  const socket=ittyConnect(channel,{as:alias});
+  const handlers={};
+  const c={
+    open:false,
+    gameConnected:false,
+    send(m){socket.send(m);return true},
+    close(){c.open=false;c.gameConnected=false;socket.close();emit('close')},
+    on(type,fn){(handlers[type]||(handlers[type]=[])).push(fn);return c}
+  };
+  function emit(type,payload){(handlers[type]||[]).slice().forEach(fn=>{try{fn(payload)}catch(e){}})}
+  socket.on('open',()=>{c.open=true;emit('open')});
+  socket.on('message',e=>{
+    if(!e)return;
+    if(e.alias===alias)return;
+    const m=e.message!==undefined?e.message:e;
+    emit('data',m);
+  });
+  socket.on('error',e=>emit('error',e));
+  socket.on('close',()=>{c.open=false;c.gameConnected=false;emit('close')});
+  return c;
+}
+
+function showCode(){document.getElementById('code').textContent=roomCode;document.getElementById('bigcode').textContent=roomCode;}
+showCode();
+try{const w=JSON.parse(localStorage.getItem('flagbattle_weights')||'{}');if(Number.isFinite(Number(w.comment)))state.weights.comment=Math.max(0,Number(w.comment));if(Number.isFinite(Number(w.subscribe)))state.weights.subscribe=Math.max(0,Number(w.subscribe));if(Number.isFinite(Number(w.custom)))state.weights.custom=Math.max(0,Number(w.custom));updatePointDisplays()}catch(e){}
+try{const f=JSON.parse(localStorage.getItem('flagbattle_features')||'{}');state.features={...state.features,...f}}catch(e){}
+function sync(){if(conn&&conn.open){try{conn.send({type:'state',state})}catch(e){}}}
+
+function showFeatureToast(big,sub=''){
+  const el=document.getElementById('featureToast'); document.getElementById('featureToastBig').textContent=big; document.getElementById('featureToastSub').textContent=sub; el.classList.add('show'); clearTimeout(window._featureToastTimer); window._featureToastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+function updateSupporters(){
+  if(!featureActive('featSupporters'))return;
+  const box=document.getElementById('supporters');box.classList.add('show');
+  const arr=Object.entries(state.supporters).sort((a,b)=>b[1]-a[1]).slice(0,Math.max(1,state.features.supporterCount));
+  document.getElementById('supporterList').innerHTML=arr.length?arr.map((x,i)=>`<div class="supporterRow"><span>${i+1}. ${escapeHtml(x[0])}</span><b>${x[1]}</b></div>`).join(''):'<div class="supporterRow">Waiting for comments…</div>';
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function updateGoal(){
+  if(!featureActive('featGoal')){document.getElementById('goalBox').classList.remove('show');return}
+  const goal=Math.max(1,state.features.goalPoints),pct=Math.min(100,(state.goalTotal/goal)*100);
+  document.getElementById('goalBox').classList.add('show');document.getElementById('goalText').textContent=`🌎 COMMUNITY GOAL  ${Math.floor(state.goalTotal)} / ${goal}`;document.getElementById('goalFill').style.width=pct+'%';
+  if(pct>=100 && !state.goalReached){state.goalReached=true;showFeatureToast('🎉 COMMUNITY GOAL REACHED!','The viewers hit the target!')}
+}
+function currentLeader(){let best=null,max=-Infinity;for(const c of countries){const v=Number(state.counts[c.name]||0);if(v>max){max=v;best=c.name}}return max>0?best:null}
+function featureActive(id){return state.features[id]!==false && (state.features['mode'+id.replace(/^feat/,'').replace(/^[a-z]/,m=>m.toUpperCase())]||'AUTO')!=='OFF'}
+function featureAuto(id){return featureActive(id) && (state.features['mode'+id.replace(/^feat/,'').replace(/^[a-z]/,m=>m.toUpperCase())]||'AUTO')!=='MANUAL'}
+function featureManual(id){return featureActive(id) && (state.features['mode'+id.replace(/^feat/,'').replace(/^[a-z]/,m=>m.toUpperCase())]||'AUTO')==='MANUAL'}
+function maybeMilestone(country,oldVal,newVal){
+  if(!featureAuto('featMilestone'))return;
+  const step=Math.max(1,state.features.milestoneStep),oldM=Math.floor(oldVal/step),newM=Math.floor(newVal/step);
+  if(newM>oldM){
+    const m=newM*step;
+    if(!state.milestones[country])state.milestones[country]=0;
+    if(newM>state.milestones[country]){
+      state.milestones[country]=newM;
+      showFeatureToast(`🎉 ${country} ${m} POINTS!`,'Milestone reached');playSound('milestone');
+    }
+  }
+}
+function handleLeaderChange(){
+  const leader=currentLeader();
+  if(leader && state.features.featOvertake && state.leader && leader!==state.leader){
+    showFeatureToast(`🔥 ${leader} OVERTAKES ${state.leader}!`,`${state.counts[leader]} points now`);playSound('overtake');
+  }
+  state.lastLeader=state.leader;state.leader=leader||'';
+}
+function startRandomEvent(){
+  if(!featureAuto('featRandom') || state.eventTimer>0)return;
+  const events=[['🔥 DOUBLE POINTS!','All new flag points are doubled.'],['⚡ SPEED ROUND!','Every new comment gets a temporary boost.'],['💥 COMEBACK!','The next scoring comment gets extra power.']];
+  const e=events[Math.floor(Math.random()*events.length)];
+  state.eventMultiplier=2;state.eventTimer=Math.max(5,state.features.randomDuration);showFeatureToast(e[0],e[1]);
+}
+function endRound(){
+  if(state.roundEnded)return;
+  state.roundEnded=true;state.running=false;
+  const winner=currentLeader();
+  if(featureAuto('featWinner') && winner){
+    const c=countries.find(x=>x.name===winner);
+    document.getElementById('winnerFlag').textContent=c?.flag||'🏆';
+    document.getElementById('winnerTitle').textContent=`🏆 ${winner} WINS!`;
+    document.getElementById('winnerScore').textContent=`${state.counts[winner]||0} points`;
+    document.getElementById('winnerModal').classList.add('show');
+  }
+  if(featureAuto('featCountdown')){
+    let n=Math.max(1,state.features.countdownSeconds);
+    document.getElementById('winnerNext').textContent=`Next battle in ${n}...`;
+    const t=setInterval(()=>{
+      n--;
+      document.getElementById('winnerNext').textContent=n>0?`Next battle in ${n}...`:'Starting next battle…';
+      if(n<=0){
+        clearInterval(t);
+        document.getElementById('winnerModal').classList.remove('show');
+        for(const c of countries)state.counts[c.name]=0;
+        state.seconds=0;state.goalTotal=0;state.goalReached=false;state.supporters={};state.milestones={};
+        state.comboCountry='';state.comboCount=0;state.roundEnded=false;state.eventMultiplier=1;state.eventTimer=0;
+        render();updateSupporters();updateGoal();state.running=true;sync();
+      }
+    },1000);
+  }
+}
+function applyFeatures(m){
+  if(m.features){state.features={...state.features,...m.features};updateSupporters();updateGoal();updateVictoryTarget();updateCrowns();document.getElementById('rush').classList.toggle('show',false);state.soundEnabled=state.features.soundEnabled!==false;state.soundVolume=Math.max(0,Math.min(1,Number(state.features.soundVolume??state.soundVolume)));}
+}
+function manualFeature(name){
+  const modeMap={overtake:'modeOvertake',supporters:'modeSupporters',combo:'modeCombo',milestone:'modeMilestone',rush:'modeRush',winner:'modeWinner',countdown:'modeCountdown',goal:'modeGoal',random:'modeRandom'};
+  if(state.features[modeMap[name]]!=='MANUAL'){showFeatureToast('MANUAL MODE REQUIRED','Set this feature to MANUAL in the panel.');return;}
+  if(name==='overtake'){const leader=currentLeader();showFeatureToast('🔥 MANUAL OVERTAKE',leader?`${leader} is the current leader`:'Waiting for a leader');}
+  else if(name==='supporters'){updateSupporters();showFeatureToast('🏆 TOP SUPPORTERS','Manual refresh');}
+  else if(name==='combo'){showFeatureToast(`🔥 ${Math.max(1,state.comboCount)} COMMENT COMBO!`,state.comboCountry||'No active combo');}
+  else if(name==='milestone'){const leader=currentLeader();showFeatureToast('🎉 MILESTONE',leader?`${leader} • ${state.counts[leader]||0} points`:'No points yet');}
+  else if(name==='rush'){document.getElementById('rush').classList.add('show');showFeatureToast('⚡ FINAL RUSH','Manual trigger');}
+  else if(name==='winner'){const winner=currentLeader(); if(!winner){showFeatureToast('🏆 NO WINNER YET','Add points first.');return;} state.roundEnded=true;state.running=false;const c=countries.find(x=>x.name===winner);document.getElementById('winnerFlag').textContent=c?.flag||'🏆';document.getElementById('winnerTitle').textContent=`🏆 ${winner} WINS!`;document.getElementById('winnerScore').textContent=`${state.counts[winner]||0} points`;document.getElementById('winnerModal').classList.add('show');}
+  else if(name==='countdown'){let n=Math.max(1,state.features.countdownSeconds);state.running=false;document.getElementById('winnerNext').textContent=`Next battle in ${n}...`;document.getElementById('winnerModal').classList.add('show');const t=setInterval(()=>{n--;document.getElementById('winnerNext').textContent=n>0?`Next battle in ${n}...`:'Starting next battle…';if(n<=0){clearInterval(t);document.getElementById('winnerModal').classList.remove('show');for(const c of countries)state.counts[c.name]=0;state.seconds=0;state.goalTotal=0;state.goalReached=false;state.supporters={};state.milestones={};state.comboCountry='';state.comboCount=0;state.roundEnded=false;state.eventMultiplier=1;state.eventTimer=0;render();updateSupporters();updateGoal();state.running=true;sync();}},1000);}
+  else if(name==='goal'){updateGoal();showFeatureToast('🎯 VIEWER GOAL','Manual refresh');}
+  else if(name==='random'){startRandomEvent(true);}
+}
+function apply(m){
+  if(!m||!m.type)return;
+  if(m.type==='hello'){
+    setConn('PC connected');
+    try{conn.send({type:'helloAck',from:'game'})}catch(e){}
+    sync();
+    return;
+  }
+  if(m.type==='helloAck'){
+    setConn('PC connected');
+    sync();
+    return;
+  }
+  if(m.type==='weights'){
+    const w=m.weights||{};
+    if(Number.isFinite(Number(w.comment)))state.weights.comment=Math.max(0,Number(w.comment));
+    if(Number.isFinite(Number(w.subscribe)))state.weights.subscribe=Math.max(0,Number(w.subscribe));
+    if(Number.isFinite(Number(w.custom)))state.weights.custom=Math.max(0,Number(w.custom));
+    try{localStorage.setItem('flagbattle_weights',JSON.stringify(state.weights))}catch(e){}
+    updatePointDisplays(); sync(); return;
+  }
+  if(m.type==='features'){applyFeatures(m);sync();return} if(m.type==='featureManual'){manualFeature(m.feature);sync();return}
+  if(m.type==='commentPopup'){
+    showCommentPopup(m.name,m.commentText);
+    return;
+  }
+  if(m.type==='add'){
+    let pts;
+    if(m.source==='youtube-comment') pts=state.weights.comment;
+    else if(m.source==='youtube-subscribe') pts=state.weights.subscribe;
+    else if(m.source==='custom') pts=state.weights.custom;
+    else pts=Number(m.points ?? m.count ?? 1);
+    pts=Number(pts); if(!Number.isFinite(pts))pts=1;
+    if(state.eventMultiplier>1)pts*=state.eventMultiplier;
+    const country=m.country;
+    const oldVal=Number(state.counts[country]||0), newVal=oldVal+pts;
+    state.counts[country]=newVal;
+    state.goalTotal+=pts;
+    if(m.name && m.source==='youtube-comment'){const name=String(m.name||'Viewer');state.supporters[name]=(state.supporters[name]||0)+pts;
+      if(featureAuto('featCombo')){
+        if(state.comboCountry===country)state.comboCount++;else{state.comboCountry=country;state.comboCount=1}
+        if(state.comboCount>=Math.max(2,state.features.comboThreshold) && state.comboCount%Math.max(2,state.features.comboThreshold)===0)showFeatureToast(`🔥 ${state.comboCount} COMMENT COMBO!`,country);
+      }
+    }
+    maybeMilestone(country,oldVal,newVal);handleLeaderChange();updateSupporters();updateGoal();render();updateCrowns();playSound('comment');triggerVictoryIfNeeded(country,newVal);sync()
+  }
+  else if(m.type==='start'){state.running=true;state.roundEnded=false;state.seconds=0;document.getElementById('timer').textContent='00:00'}
+  else if(m.type==='stop'){state.running=false}
+  else if(m.type==='reset'){for(const c of countries)state.counts[c.name]=0;state.seconds=0;state.running=false;state.roundEnded=false;state.supporters={};state.goalTotal=0;state.goalReached=false;state.milestones={};state.comboCountry='';state.comboCount=0;state.eventMultiplier=1;state.eventTimer=0;document.getElementById('timer').textContent='00:00';document.getElementById('rush').classList.remove('show');render();updateSupporters();updateGoal();sync()}
+}
+function setConn(t){document.getElementById('conn').textContent=t}
+let relayReconnectTimer=null;
+function makeRelay(){
+  if(relayReconnectTimer){clearTimeout(relayReconnectTimer);relayReconnectTimer=null;}
+  if(conn){try{conn.close()}catch(e){}}
+  setConn('connecting to relay…');
+  const c=makeRelayConnection(roomCode,'game');
+  conn=c;
+  c.on('open',()=>{
+    setConn('waiting for PC');
+    try{c.send({type:'hello',from:'game'})}catch(e){}
+  });
+  c.on('data',apply);
+  c.on('close',()=>{
+    if(conn!==c)return;
+    setConn('relay disconnected — reconnecting…');
+    relayReconnectTimer=setTimeout(()=>{relayReconnectTimer=null;if(conn===c)makeRelay()},1500);
+  });
+  c.on('error',()=>{if(conn===c)setConn('relay connection error — retrying…')});
+}
+makeRelay();
+
+setInterval(()=>{if(state.running){
+  state.seconds++;
+  let m=String(Math.floor(state.seconds/60)).padStart(2,'0'),s=String(state.seconds%60).padStart(2,'0');document.getElementById('timer').textContent=m+':'+s;
+  if(featureAuto('featRush') && state.features.roundDuration>0 && state.seconds>=Math.max(0,state.features.roundDuration-state.features.finalRushSeconds))document.getElementById('rush').classList.add('show');
+  if(featureAuto('featRush') && state.features.roundDuration>0 && state.seconds>=state.features.roundDuration)endRound();
+  if(state.eventTimer>0){state.eventTimer--;if(state.eventTimer<=0){state.eventMultiplier=1;showFeatureToast('Event ended','Normal points restored.')}} 
+  if(featureAuto('featRandom') && state.seconds>0 && state.seconds%30===0)startRandomEvent();
+}},1000);
+render();updateSupporters();updateGoal();updateVictoryTarget();updateCrowns();
+document.addEventListener('pointerdown',unlockAudio,{once:false,passive:true});
+</script></body></html>
